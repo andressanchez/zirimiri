@@ -1,0 +1,152 @@
+<link rel="import" href="../../components/polymer/polymer.html">
+<script src="raphael.js"></script>
+<script src="polymerDiagrams.js"></script>
+
+<polymer-element name="designer-canvas" vertical layout>
+
+    <template>
+        <link rel="stylesheet" href="designer-canvas.css">
+        <style>
+            host {
+                width: 100%;
+                height: 100%;
+            }
+            #canvas {
+                width: 100%;
+                height: 100%;
+                background: #fafafa;
+            }
+        </style>
+
+        <div id="canvas">
+            <!--<div class="w" id="opened">BEGIN<div class="ep"></div></div>
+            <div class="w" id="phone1">PHONE INTERVIEW 1<div class="ep"></div></div>
+            <div class="w" id="phone2">PHONE INTERVIEW 2<div class="ep"></div></div>
+            <div class="w" id="inperson">IN PERSON<div class="ep"></div></div>
+            <div class="w" id="rejected">REJECTED<div class="ep"></div></div>-->
+            <content></content>
+        </div>
+
+    </template>
+
+    <script>
+
+        /**
+         *
+         */
+        var canvasElement;
+        var sourceElement;
+
+        /**
+         *
+         */
+        var moveObjectEvent;
+        var releaseObjectEvent;
+
+        /**
+         *
+         */
+        var paper;
+        var arrowElement;
+        var createArrowEvent;
+        var enlargeArrowEvent;
+        var placeArrowEvent;
+
+        Polymer('designer-canvas',
+        {
+            ready: function() {
+                canvasElement = this.$.canvas;
+                canvasElement.onmousedown = this.detectAction;
+                moveObjectEvent = this.moveObject;
+                releaseObjectEvent = this.releaseObject;
+                createArrowEvent = this.createArrow;
+                placeArrowEvent = this.placeArrow;
+                paper = Raphael(canvasElement);
+            },
+
+            detectAction: function(event) {
+                event = event || window.event;
+                var element = (event.target || event.srcElement);
+
+                if (element.tagName == 'FANCY-BOX')
+                {
+                    sourceElement = element.parentElement;
+                    canvasElement.onmousemove = moveObjectEvent;
+                    canvasElement.onmouseup = releaseObjectEvent;
+                }
+                else if (element.className == 'ep')
+                {
+                    sourceElement  = element;
+                    canvasElement.onmousemove = createArrowEvent;
+                    canvasElement.onmouseup = placeArrowEvent;
+                }
+            },
+
+            moveObject: function(event) {
+                var x = event.clientX;
+                var y = event.clientY;
+                var canvasPosition =  getAbsolutePosition(canvasElement);
+                sourceElement.style.top = (y - sourceElement.offsetHeight * 0.5 - canvasPosition.y) + 'px';
+                sourceElement.style.left = (x - sourceElement.offsetWidth * 0.5 - canvasPosition.x) + 'px';
+
+                var links = getLinks(sourceElement);
+                if (links != null)
+                {
+                    links.forEach(function(link) {
+                        // Which side of the target element is the nearest to the center of the source element?
+                        var nearestSideToTarget = findNearestSideToElement(link.source, link.target);
+                        // Which side of the target element is the nearest to the center of the target element?
+                        var nearestSideToSource = findNearestSideToElement(link.target, link.source);
+                        var _source = calculateMiddleOfSide(link.source, nearestSideToSource);
+                        var _target = calculateMiddleOfSide(link.target, nearestSideToTarget);
+                        link.arrow.linePath.remove();
+                        link.arrow.arrowPath.remove();
+                        link.arrow = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
+                    });
+                }
+            },
+
+            releaseObject: function(event) {
+                canvasElement.onmousemove = null;
+            },
+
+            createArrow: function(event) {
+                if(arrowElement != null)
+                {
+                    arrowElement.linePath.remove();
+                    arrowElement.arrowPath.remove();
+                }
+                var initialPosition = getAbsolutePosition(sourceElement);
+                var canvasPosition =  getAbsolutePosition(canvasElement);
+                var actualX = event.clientX;
+                var actualY = event.clientY;
+                arrowElement = paper.arrow(initialPosition.x - canvasPosition.x, initialPosition.y - canvasPosition.y, actualX - canvasPosition.x, actualY - canvasPosition.y, 4);
+            },
+
+            placeArrow: function(event) {
+                event = event || window.event;
+                var element = (event.target || event.srcElement);
+
+                // We will need a new arrow, anyway!
+                arrowElement.linePath.remove();
+                arrowElement.arrowPath.remove();
+
+                if (element.className == 'w' || element.tagName == 'FANCY-BOX')
+                {
+                    // Which side of the target element is the nearest to the center of the source element?
+                    var nearestSideToTarget = findNearestSideToElement(sourceElement.parentElement, element.parentElement);
+                    // Which side of the target element is the nearest to the center of the target element?
+                    var nearestSideToSource = findNearestSideToElement(element.parentElement, sourceElement.parentElement);
+                    var _source = calculateMiddleOfSide(sourceElement.parentElement, nearestSideToSource);
+                    var _target = calculateMiddleOfSide(element.parentElement, nearestSideToTarget);
+                    arrowElement = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
+                    addLink(sourceElement.parentElement, element.parentElement, arrowElement);
+                }
+
+                canvasElement.onmousemove = null;
+                arrowElement = null;
+            }
+        });
+    </script>
+
+</polymer-element>

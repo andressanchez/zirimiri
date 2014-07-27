@@ -1,0 +1,183 @@
+<link rel="import" href="../../components/polymer/polymer.html">
+<link rel="import" href="../../components/code-mirror/code-mirror.html">
+<link rel="import" href="../../components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../../components/core-icon-button/core-icon-button.html">
+<link rel="import" href="../../components/core-menu-button/core-menu-button.html">
+<link rel="import" href="../../components/core-item/core-item.html">
+<link rel="import" href="../../components/core-pages/core-pages.html">
+<link rel="import" href="../../components/fancy-box/fancy-box.html">
+
+<link rel="import" href="../designer-palette/designer-palette.html">
+<link rel="import" href="../designer-tree/designer-tree.html">
+<link rel="import" href="../designer-canvas/designer-canvas.html">
+
+<polymer-element name="designer-editor" vertical layout>
+
+    <template>
+
+        <link href="designer-editor.css" rel="stylesheet">
+
+        <core-toolbar id="appbar" class="narrow">
+
+            <core-icon-button title="Toggle Code/Design" icon="unfold-more" class="rotate {{ {selected: selected === 'code'} | tokenList }}" name="code" on-tap="{{codeToggleAction}}"></core-icon-button>
+
+            <span class="separator"></span>
+
+            <core-icon-button title="Save" icon="save" on-tap="{{saveAction}}"></core-icon-button>
+            <!-- shareAction must be triggered from click to allow opening a tab (otherwise can only open a floating window) -->
+            <core-icon-button title="Launch Preview" icon="launch" on-click="{{previewAction}}"></core-icon-button>
+
+            <div class="design-controls" horizontal center layout hidden?="{{selected == 'code'}}">
+                <span class="separator"></span>
+                <core-icon-button title="Undo" disabled?="{{!$.state.canBack}}" icon="rotate-left" on-tap="{{undoAction}}"></core-icon-button>
+                <core-icon-button title="Redo" disabled?="{{!$.state.canForward}}" icon="rotate-right" on-tap="{{redoAction}}"></core-icon-button>
+                <span class="separator" hidden?="{{selected == 'code'}}"></span>
+                <core-icon-button title="Toggle Fullwidth" icon="drawer" class="{{ {selected: maximized} | tokenList}}" on-tap="{{fullscreenAction}}"></core-icon-button>
+            </div>
+
+        </core-toolbar>
+
+        <core-pages flex selected="{{selected}}">
+
+            <section name="design" horizontal layout>
+                <designer-canvas id="canvas"></designer-canvas>
+                <div id="tools" name="tools" class="{{ {maximized: maximized} | tokenList}}">
+                    <div class="splitterContainer" vertical layout>
+                        <core-toolbar class="designTools narrow">
+                            <div id="selectedElement" flex>
+                                <core-icon-button title="Select Parent" icon="arrow-back" on-click="{{selectParentElement}}" hidden?="{{!selectedName}}"></core-icon-button>
+                                {{selectedName}}
+                            </div>
+
+                            <core-icon-button icon="fullscreen" on-tap="{{maximizeElement}}" title="Auto-size"></core-icon-button>
+
+                            <core-menu-button title="More..." icon="more-vert" halign="right">
+                                <style>
+                                    .core-selected {
+                                        font-weight: normal;
+                                    }
+
+                                    core-item.rotate::shadow core-icon {
+                                        transform: rotate(90deg);
+                                        -webkit-transform: rotate(90deg);
+                                    }
+                                </style>
+                                <core-item icon="arrow-back" class="rotate" label="Move Up" on-tap="{{moveoutElement}}"></core-item>
+                                <core-item icon="arrow-back" label="Move Back" on-tap="{{promoteElement}}"></core-item>
+                                <core-item icon="arrow-forward" label="Move Forward" on-tap="{{demoteElement}}"></core-item>
+                                <core-item icon="delete" label="Delete" on-tap="{{deleteElement}}"></core-item>
+                            </core-menu-button>
+                        </core-toolbar>
+
+                        <div class="paletteTree" vertical layout flex>
+                            <core-selector id="tabs" valueAttr="name" selected="{{selectedTool}}">
+                                <span name="palette">Palette</span>
+                                <span name="tree">Tree</span>
+                            </core-selector>
+
+                            <core-pages id="interior" flex valueAttr="id" selected="{{selectedTool}}">
+                                <design-palette id="palette" categories="{{controller.jsonComponents.categories}}"></design-palette>
+                                <design-tree id="tree" canvas="{{$.canvas}}" on-node-select="{{treeNodeSelected}}"></design-tree>
+                            </core-pages>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <code-mirror id="code" name="code" mode="clojure"></code-mirror>
+        </core-pages>
+    </template>
+
+    <script>
+
+        var designerCanvas;
+
+        Polymer('designer-editor',
+        {
+            selected: 'design',
+            selectedName: 'topology-1',
+            paletteMode: 'menu',
+            selectedTool: 'palette',
+            components: [],
+            controller: null,
+
+            eventDelegates: {
+                'drag-start': 'drag'
+            },
+
+            ready: function() {
+                designerCanvas = this.$.canvas;
+            },
+
+            codeToggleAction: function() {
+                this.selected = this.selected === 'design' ? 'code' : 'design';
+            },
+
+            fullscreenAction: function() {
+                this.maximized = !this.maximized;
+            },
+
+            drag: function(event, dragInfo) {
+                dragInfo.element = dragInfo.event.target;
+
+                if (!dragInfo.element || dragInfo.element.className != "simple-item") {
+                    return;
+                }
+                dragInfo.id = dragInfo.element.attributes.id.value;
+                dragInfo.data = this.controller.components.getComponentById(dragInfo.id);
+                var d = document.createElement('fancy-box');
+                d.setAttribute('label', dragInfo.data.name);
+                d.setAttribute('logo', dragInfo.data.logo);
+                d.className = 'dropped';
+                event.detail.avatar.appendChild(d);
+                event.detail.drag = function() {};
+                event.detail.drop = this.drop;
+            },
+
+            drop: function(dragInfo) {
+                var dropTarget = dragInfo.event.relatedTarget;
+                if (dropTarget.tagName === 'svg') {
+                    var f = dragInfo.framed;
+                    var wrapper = document.createElement('div');
+                    wrapper.setAttribute('class', 'wrapper');
+                    wrapper.setAttribute('id', guid());
+                    wrapper.className = 'dropped';
+                    wrapper.style.left = f.x - 4 + 'px';
+                    wrapper.style.top = f.y - 4 + 'px';
+                    var box = document.createElement('fancy-box');
+                    box.setAttribute('label', dragInfo.data.name);
+                    box.setAttribute('logo', dragInfo.data.logo);
+                    var arrowBox = document.createElement('div');
+                    arrowBox.setAttribute('class', 'ep');
+                    wrapper.appendChild(box);
+                    wrapper.appendChild(arrowBox);
+                    designerCanvas.appendChild(wrapper);
+                }
+
+                var myNode = dragInfo.avatar;
+                while (myNode.firstChild) {
+                    myNode.removeChild(myNode.firstChild);
+                }
+            },
+
+            setController: function(vm) {
+                this.controller = vm.$scope;
+                this.components = this.controller.jsonComponents;
+                this.updateCode();
+            },
+
+            updateCode: function() {
+                this.$.code.mirror.setValue(this.controller.code);
+                this.$.code.refresh();
+            }
+        });
+
+        addEventListener("opt_click_1", function (e) {
+        });
+
+        addEventListener("opt_click_2", function (e) {
+            //document.getElementById("configuration-window").tapHandler();
+        });
+    </script>
+
+</polymer-element>

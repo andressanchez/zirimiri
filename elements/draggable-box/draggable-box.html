@@ -1,0 +1,31 @@
+<link rel="import" href="../../components/polymer/polymer.html">
+<link rel="import" href="../../components/fontawesome-icon/fontawesome-icon.html">
+
+<polymer-element name="draggable-box" attributes="label icon">
+    <template>
+        <style>
+            :host {
+                position: relative;
+                display: block;
+                padding: 10px 15px;
+                background-color: #ffffff;
+                border: 1px solid #dddddd;
+                cursor: move;
+                color: #514C54;
+                margin-bottom: -1px;
+            }
+        </style>
+
+        <fontawesome-icon value="fa {{icon}} fa-fw"></fontawesome-icon>&nbsp; {{label}}
+
+    </template>
+
+    <script>
+        Polymer('draggable-box', {
+            icon: 'fa-cloud',
+            label: '',
+            class: ''
+        });
+    </script>
+
+</polymer-element>

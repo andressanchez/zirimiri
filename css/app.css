@@ -1,0 +1,53 @@
+html, body {
+    font-family: 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
+    margin: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    overflow:hidden;
+}
+
+iframe {
+    height: 100%;
+    width: 100%;
+    border: 0;
+    overflow: hidden;
+}
+.content {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: sans-serif;
+}
+core-header-panel {
+    background: #eeeeee;
+}
+core-toolbar {
+    background-color: #424242;
+}
+#navheader {
+    background-color: #56BA89;
+}
+/* drawer is always visible on a wide screen
+   so menu button isn't required */
+core-drawer-panel:not([narrow]) #navicon {
+    display: none;
+}
+
+#mainheader {
+    color: white;
+}
+
+.core-selected {
+    color: #0288d1;
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="zirimiriEditor" data-framework="typescript">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+        <link rel="shortcut icon" href="images/favicon.ico" />
+        <link href="css/editor.css" rel="stylesheet">
+        <title>Zirimiri</title>
+
+        <!-- Polymer -->
+        <script src="components/platform/platform.js"></script>
+        <link rel="import" href="elements/designer-editor/designer-editor.html">
+        <script>
+           window.addEventListener('polymer-ready', function(e) {
+               var vm = angular.element(document.querySelector("body")).scope().vm;
+               document.getElementById('editor').setController(vm);
+            });
+        </script>
+
+        <!-- AngularJS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.min.js"></script>
+        <script src="https://code.angularjs.org/1.2.20/angular-resource.min.js"></script>
+        <script src="js/Application.js"></script>
+    </head>
+
+    <body unresolved ng-controller="editorCtrl">
+        <designer-editor id="editor"></designer-editor>
+    </body>
+
+</html>

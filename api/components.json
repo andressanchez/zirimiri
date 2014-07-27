@@ -1,0 +1,54 @@
+{
+    "categories":
+        [
+            {
+                "name": "Input",
+                "components":
+                    [
+                        {
+                            "id": "restful-input",
+                            "name": "RESTful Input",
+                            "logo": "fa-cloud"
+                        }
+                    ]
+            },
+            {
+                "name": "Processing",
+                "components":
+                    [
+                        {
+                            "id": "counter",
+                            "name": "Counter",
+                            "logo": "fa-clock-o"
+                        }
+                    ]
+            },
+            {
+                "name": "Storm Primitives",
+                "components":
+                    [
+                        {
+                            "id": "group-by",
+                            "name": "Group By",
+                            "logo": "fa-sitemap"
+                        }
+                    ]
+            },
+            {
+                "name": "Output",
+                "components":
+                    [
+                        {
+                            "id": "cassandra-db",
+                            "name": "CassandraDB",
+                            "logo": "fa-database"
+                        },
+                        {
+                            "id": "hdfs-file",
+                            "name": "HDFS File",
+                            "logo": "fa-file-text-o"
+                        }
+                    ]
+            }
+        ]
+}
