@@ -51,3 +51,7 @@ core-drawer-panel:not([narrow]) #navicon {
 .core-selected {
     color: #0288d1;
 }
+
+.core-selected /deep/ core-icon {
+    fill: #0288d1;
+}

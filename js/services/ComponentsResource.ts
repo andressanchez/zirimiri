@@ -14,7 +14,7 @@ module services
 
         getComponents():ng.IPromise<any>
         {
-            return this.$resource('/zirimiri-ui/api/components.json').get().$get();
+            return this.$resource('api/components.json').get().$get();
         }
     }
 }

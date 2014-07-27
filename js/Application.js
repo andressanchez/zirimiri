@@ -134,7 +134,7 @@ var services;
             this.$resource = $resource;
         }
         ComponentsResource.prototype.getComponents = function () {
-            return this.$resource('/zirimiri-ui/api/components.json').get().$get();
+            return this.$resource('api/components.json').get().$get();
         };
         ComponentsResource.$inject = [
             '$resource'
@@ -153,7 +153,7 @@ var services;
             this.$resource = $resource;
         }
         CodeResource.prototype.getCode = function () {
-            return this.$resource('/zirimiri-ui/api/code.json').get().$get();
+            return this.$resource('api/code.json').get().$get();
         };
         CodeResource.$inject = [
             '$resource'
