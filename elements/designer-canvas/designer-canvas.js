@@ -1,6 +1,7 @@
-Raphael.fn.arrow = function (_sx, _sy, _tx, _ty, size) {
+Raphael.fn.arrow = function (_sx, _sy, _tx, _ty, size)
+{
     var curviness = 20;
-    var proximityLimit = 80;
+    var proximityLimit = 120;
     var _midx = (_sx + _tx) / 2, _midy = (_sy + _ty) / 2,
         m2 = (-1 * _midx) / _midy, theta2 = Math.atan(m2),
         dy =  (m2 == Infinity || m2 == -Infinity) ? 0 : Math.abs(curviness / 2 * Math.sin(theta2)),
@@ -8,8 +9,8 @@ Raphael.fn.arrow = function (_sx, _sy, _tx, _ty, size) {
         segment = _segment(_sx, _sy, _tx, _ty),
         distance = Math.sqrt(Math.pow(_tx - _sx, 2) + Math.pow(_ty - _sy, 2)),
 
-    // calculate the control point.  this code will be where we'll put in a rudimentary element avoidance scheme; it
-    // will work by extending the control point to force the curve to be, um, curvier.
+        // calculate the control point.  this code will be where we'll put in a rudimentary element avoidance scheme; it
+        // will work by extending the control point to force the curve to be, um, curvier.
         _controlPoint = _findControlPoint(_midx,
             _midy,
             segment,
@@ -169,6 +170,8 @@ function pDistance(x, y, x1, y1, x2, y2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
+var _links = {};
+
 function addLink(source, target, arrow)
 {
     if (_links[source.id] == null) _links[source.id] = [];
@@ -183,37 +186,18 @@ function getLinks(source)
     return _links[source.id];
 }
 
-var _links = {};
-
-function updateArrows(sourceElement)
+function removeLinks()
 {
-    var links = getLinks(sourceElement);
-    var sides = {};
-    if (links != null)
+    for (var key in _links)
     {
-        links.forEach(function(link) {
-            var nearestSideToTarget = findNearestSideToElement(link.source, link.target);
-            var nearestSideToSource = findNearestSideToElement(link.target, link.source);
-            if (sides[link.source.id][nearestSideToSource] == null) sides[link.source.id][nearestSideToSource] = 0;
-            sides[link.source.id][nearestSideToSource]++;
-            if (sides[link.target.id][nearestSideToTarget] == null) sides[link.target.id][nearestSideToTarget] = 0;
-            sides[link.target.id][nearestSideToTarget]++;
-        });
-
-        links.forEach(function(link) {
-            // Which side of the target element is the nearest to the center of the source element?
-            var nearestSideToTarget = findNearestSideToElement(link.source, link.target);
-            // Which side of the target element is the nearest to the center of the target element?
-            var nearestSideToSource = findNearestSideToElement(link.target, link.source);
-            var _source = calculateMiddleOfSide(link.source, nearestSideToSource);
-            var _target = calculateMiddleOfSide(link.target, nearestSideToTarget);
-            console.log(sides[link.source.id][nearestSideToSource]);
-            console.log(sides[link.target.id][nearestSideToTarget]);
-            link.arrow.linePath.remove();
-            link.arrow.arrowPath.remove();
-            link.arrow = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
-        });
+        if (_links.hasOwnProperty(key))
+        {
+            _links[key][0].arrow.linePath.remove();
+            _links[key][0].arrow.arrowPath.remove();
+        }
     }
+
+    _links = {};
 }
 
 var guid = (function() {

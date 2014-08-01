@@ -41,5 +41,85 @@ module controllers
                $scope.code = result.code;
             });
         }
+
+        /**
+         * Create a new topology
+         */
+        public createTopology():void
+        {
+            model.Topology.getInstance().resetTopology();
+            console.log("Created topology!");
+        }
+
+        /**
+         *
+         * @param targetFile
+         * @returns {boolean}
+         */
+        public saveTopology(targetFile: string):boolean
+        {
+            return false;
+        }
+
+        /**
+         *
+         * @param sourceFile
+         * @returns {boolean}
+         */
+        public loadTopology(sourceFile: string):boolean
+        {
+            return false;
+        }
+
+        /**
+         * Add a new component to the topology
+         * @param className Class of the new component
+         * @returns {string} UUID of the new component
+         */
+        public addComponent(className: string):string
+        {
+            return null;
+        }
+
+        /**
+         *
+         * @param uuid
+         * @returns {boolean}
+         */
+        public removeComponent(uuid: string):boolean
+        {
+            return false;
+        }
+
+        /**
+         *
+         * @param uuidSource
+         * @param uuidTarget
+         * @returns {boolean}
+         */
+        public addConnection(uuidSource: string, uuidTarget: string):boolean
+        {
+            return false;
+        }
+
+        /**
+         *
+         * @param uuidSource
+         * @param uuidTarget
+         * @returns {boolean}
+         */
+        public removeConnection(uuidSource: string, uuidTarget: string):boolean
+        {
+            return false;
+        }
+
+        /**
+         *
+         * @returns {string[]}
+         */
+        public topologyToCode():string[]
+        {
+            return null;
+        }
     }
 }

@@ -1,59 +1,63 @@
+<!--
+A canvas component for Zirimiri Designer.
+
+##### Example
+
+    <designer-canvas id="canvas"></designer-canvas>
+
+@element designer-canvas
+@blurb A canvas component for Zirimiri Designer
+@status alpha
+@author Andrés Sánchez
+@homepage https://github.com/andressanchez/zirimiri
+-->
+
 <link rel="import" href="../../components/polymer/polymer.html">
 <script src="raphael.js"></script>
-<script src="polymerDiagrams.js"></script>
+<script src="designer-canvas.js"></script>
 
 <polymer-element name="designer-canvas" vertical layout>
 
     <template>
         <link rel="stylesheet" href="designer-canvas.css">
-        <style>
-            host {
-                width: 100%;
-                height: 100%;
-            }
-            #canvas {
-                width: 100%;
-                height: 100%;
-                background: #fafafa;
-            }
-        </style>
-
         <div id="canvas">
-            <!--<div class="w" id="opened">BEGIN<div class="ep"></div></div>
-            <div class="w" id="phone1">PHONE INTERVIEW 1<div class="ep"></div></div>
-            <div class="w" id="phone2">PHONE INTERVIEW 2<div class="ep"></div></div>
-            <div class="w" id="inperson">IN PERSON<div class="ep"></div></div>
-            <div class="w" id="rejected">REJECTED<div class="ep"></div></div>-->
             <content></content>
         </div>
-
     </template>
 
     <script>
 
         /**
-         *
+         * TODO. At the moment, we need global vars
+         * to get access to some polymer attributes
+         * from asynchronous events.
          */
+
+        // Canvas element
         var canvasElement;
+        // Element that fired the event
         var sourceElement;
 
-        /**
-         *
-         */
+        // Event fired when an object is moved
         var moveObjectEvent;
+        // Event fired when an object is released
         var releaseObjectEvent;
 
-        /**
-         *
-         */
+        // RaphaelJS paper element
         var paper;
+        // Arrow drawing element
         var arrowElement;
+        // Event fired to create an arrow
         var createArrowEvent;
-        var enlargeArrowEvent;
+        // Event fired to place an arrow
         var placeArrowEvent;
 
         Polymer('designer-canvas',
         {
+            /**
+             * When the element has been created,
+             * global vars can be set
+             */
             ready: function() {
                 canvasElement = this.$.canvas;
                 canvasElement.onmousedown = this.detectAction;
@@ -64,17 +68,22 @@
                 paper = Raphael(canvasElement);
             },
 
+            /**
+             * When the canvas is clicked, it is necessary
+             * to decide which action to take
+             * @param event Click event
+             */
             detectAction: function(event) {
                 event = event || window.event;
                 var element = (event.target || event.srcElement);
 
-                if (element.tagName == 'FANCY-BOX')
+                if (element.tagName == 'FANCY-BOX') // Move box!
                 {
                     sourceElement = element.parentElement;
                     canvasElement.onmousemove = moveObjectEvent;
                     canvasElement.onmouseup = releaseObjectEvent;
                 }
-                else if (element.className == 'ep')
+                else if (element.className == 'ep') // Create an arrow!
                 {
                     sourceElement  = element;
                     canvasElement.onmousemove = createArrowEvent;
@@ -82,6 +91,10 @@
                 }
             },
 
+            /**
+             * Move a component box
+             * @param event
+             */
             moveObject: function(event) {
                 var x = event.clientX;
                 var y = event.clientY;
@@ -106,10 +119,19 @@
                 }
             },
 
+            /**
+             * Place the component box in its place
+             * @param event Click event
+             */
             releaseObject: function(event) {
                 canvasElement.onmousemove = null;
             },
 
+            /**
+             * Create an arrow from the starting position
+             * to the current position
+             * @param event Click event
+             */
             createArrow: function(event) {
                 if(arrowElement != null)
                 {
@@ -123,6 +145,10 @@
                 arrowElement = paper.arrow(initialPosition.x - canvasPosition.x, initialPosition.y - canvasPosition.y, actualX - canvasPosition.x, actualY - canvasPosition.y, 4);
             },
 
+            /**
+             * Place the arrow in its position
+             * @param event Click event
+             */
             placeArrow: function(event) {
                 event = event || window.event;
                 var element = (event.target || event.srcElement);
@@ -144,7 +170,21 @@
                 }
 
                 canvasElement.onmousemove = null;
+                canvasElement.onmouseup = null;
                 arrowElement = null;
+            },
+
+            /**
+             * Remove components and links
+             */
+            reset: function() {
+                // 1. Remove components
+                var boxes = designerCanvas.querySelectorAll(".dropped");
+                for (var index = 0; index < boxes.length; ++index) {
+                    boxes[index].parentElement.removeChild(boxes[index]);
+                }
+                // 2. Clear links
+                removeLinks();
             }
         });
     </script>

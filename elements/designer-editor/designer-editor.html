@@ -20,12 +20,21 @@
         <core-toolbar id="appbar" class="narrow">
 
             <core-icon-button title="Toggle Code/Design" icon="unfold-more" class="rotate {{ {selected: selected === 'code'} | tokenList }}" name="code" on-tap="{{codeToggleAction}}"></core-icon-button>
-
+            <core-menu-button title="More..." icon="more-vert" halign="left">
+                <style>
+                    .core-selected {
+                        font-weight: normal;
+                    }
+                </style>
+                <core-item label="Storm" on-tap="{{moveoutElement}}"></core-item>
+                <core-item label="Trident" on-tap="{{promoteElement}}"></core-item>
+                <core-item label="Marceline" on-tap="{{demoteElement}}"></core-item>
+            </core-menu-button>
             <span class="separator"></span>
 
-            <core-icon-button title="Save" icon="save" on-tap="{{saveAction}}"></core-icon-button>
-            <!-- shareAction must be triggered from click to allow opening a tab (otherwise can only open a floating window) -->
-            <core-icon-button title="Launch Preview" icon="launch" on-click="{{previewAction}}"></core-icon-button>
+            <core-icon-button title="New Topology" icon="create" on-click="{{createTopology}}"></core-icon-button>
+            <core-icon-button title="Open Topology" icon="folder" on-tap="{{openTopology}}"></core-icon-button>
+            <core-icon-button title="Save Topology" icon="save" on-tap="{{saveTopology}}"></core-icon-button>
 
             <div class="design-controls" horizontal center layout hidden?="{{selected == 'code'}}">
                 <span class="separator"></span>
@@ -48,25 +57,6 @@
                                 <core-icon-button title="Select Parent" icon="arrow-back" on-click="{{selectParentElement}}" hidden?="{{!selectedName}}"></core-icon-button>
                                 {{selectedName}}
                             </div>
-
-                            <core-icon-button icon="fullscreen" on-tap="{{maximizeElement}}" title="Auto-size"></core-icon-button>
-
-                            <core-menu-button title="More..." icon="more-vert" halign="right">
-                                <style>
-                                    .core-selected {
-                                        font-weight: normal;
-                                    }
-
-                                    core-item.rotate::shadow core-icon {
-                                        transform: rotate(90deg);
-                                        -webkit-transform: rotate(90deg);
-                                    }
-                                </style>
-                                <core-item icon="arrow-back" class="rotate" label="Move Up" on-tap="{{moveoutElement}}"></core-item>
-                                <core-item icon="arrow-back" label="Move Back" on-tap="{{promoteElement}}"></core-item>
-                                <core-item icon="arrow-forward" label="Move Forward" on-tap="{{demoteElement}}"></core-item>
-                                <core-item icon="delete" label="Delete" on-tap="{{deleteElement}}"></core-item>
-                            </core-menu-button>
                         </core-toolbar>
 
                         <div class="paletteTree" vertical layout flex>
@@ -76,7 +66,7 @@
                             </core-selector>
 
                             <core-pages id="interior" flex valueAttr="id" selected="{{selectedTool}}">
-                                <design-palette id="palette" categories="{{controller.jsonComponents.categories}}"></design-palette>
+                                <design-palette id="palette" categories="{{controllerScope.jsonComponents.categories}}"></design-palette>
                                 <design-tree id="tree" canvas="{{$.canvas}}" on-node-select="{{treeNodeSelected}}"></design-tree>
                             </core-pages>
                         </div>
@@ -96,10 +86,9 @@
         {
             selected: 'design',
             selectedName: 'topology-1',
-            paletteMode: 'menu',
             selectedTool: 'palette',
-            components: [],
             controller: null,
+            controllerScope: null,
 
             eventDelegates: {
                 'drag-start': 'drag'
@@ -117,6 +106,16 @@
                 this.maximized = !this.maximized;
             },
 
+            /**
+             * Create a new topology
+             */
+            createTopology: function() {
+                // Reset topology object in the model
+                this.controller.createTopology();
+                // Clean canvas and arrows
+                designerCanvas.reset();
+            },
+
             drag: function(event, dragInfo) {
                 dragInfo.element = dragInfo.event.target;
 
@@ -124,7 +123,7 @@
                     return;
                 }
                 dragInfo.id = dragInfo.element.attributes.id.value;
-                dragInfo.data = this.controller.components.getComponentById(dragInfo.id);
+                dragInfo.data = this.controllerScope.components.getComponentById(dragInfo.id);
                 var d = document.createElement('fancy-box');
                 d.setAttribute('label', dragInfo.data.name);
                 d.setAttribute('logo', dragInfo.data.logo);
@@ -161,13 +160,13 @@
             },
 
             setController: function(vm) {
-                this.controller = vm.$scope;
-                this.components = this.controller.jsonComponents;
+                this.controller = vm;
+                this.controllerScope = vm.$scope;
                 this.updateCode();
             },
 
             updateCode: function() {
-                this.$.code.mirror.setValue(this.controller.code);
+                this.$.code.mirror.setValue(this.controller.$scope.code);
                 this.$.code.refresh();
             }
         });

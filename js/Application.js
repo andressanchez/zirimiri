@@ -29,6 +29,77 @@ var controllers;
                 $scope.code = result.code;
             });
         }
+        /**
+        * Create a new topology
+        */
+        EditorCtrl.prototype.createTopology = function () {
+            model.Topology.getInstance().resetTopology();
+            console.log("Created topology!");
+        };
+
+        /**
+        *
+        * @param targetFile
+        * @returns {boolean}
+        */
+        EditorCtrl.prototype.saveTopology = function (targetFile) {
+            return false;
+        };
+
+        /**
+        *
+        * @param sourceFile
+        * @returns {boolean}
+        */
+        EditorCtrl.prototype.loadTopology = function (sourceFile) {
+            return false;
+        };
+
+        /**
+        * Add a new component to the topology
+        * @param className Class of the new component
+        * @returns {string} UUID of the new component
+        */
+        EditorCtrl.prototype.addComponent = function (className) {
+            return null;
+        };
+
+        /**
+        *
+        * @param uuid
+        * @returns {boolean}
+        */
+        EditorCtrl.prototype.removeComponent = function (uuid) {
+            return false;
+        };
+
+        /**
+        *
+        * @param uuidSource
+        * @param uuidTarget
+        * @returns {boolean}
+        */
+        EditorCtrl.prototype.addConnection = function (uuidSource, uuidTarget) {
+            return false;
+        };
+
+        /**
+        *
+        * @param uuidSource
+        * @param uuidTarget
+        * @returns {boolean}
+        */
+        EditorCtrl.prototype.removeConnection = function (uuidSource, uuidTarget) {
+            return false;
+        };
+
+        /**
+        *
+        * @returns {string[]}
+        */
+        EditorCtrl.prototype.topologyToCode = function () {
+            return null;
+        };
         EditorCtrl.$inject = [
             '$scope',
             'componentsResource',
@@ -124,6 +195,53 @@ var model;
     })();
     model.Components = Components;
 })(model || (model = {}));
+var model;
+(function (model) {
+    'use strict';
+
+    /**
+    * The Topology class represents a Storm topology, made of
+    * components and connections between those components.
+    * @author Andrés Sánchez
+    */
+    var Topology = (function () {
+        function Topology() {
+        }
+        /**
+        * As only one topology can be modified at a time,
+        * we get the same instance
+        * @returns {Topology} Unique instance
+        */
+        Topology.getInstance = function () {
+            if (this.uniqueInstance == null)
+                this.uniqueInstance = new Topology();
+
+            return this.uniqueInstance;
+        };
+
+        /**
+        * Reset the topology and leave it empty
+        */
+        Topology.prototype.resetTopology = function () {
+            this.components = [];
+            this.connections = [];
+        };
+        return Topology;
+    })();
+    model.Topology = Topology;
+})(model || (model = {}));
+/// <reference path='../_all.ts' />
+var model;
+(function (model) {
+    'use strict';
+
+    var Connection = (function () {
+        function Connection() {
+        }
+        return Connection;
+    })();
+    model.Connection = Connection;
+})(model || (model = {}));
 /// <reference path='../_all.ts' />
 var services;
 (function (services) {
@@ -169,6 +287,8 @@ var services;
 /// <reference path='model/Category.ts' />
 /// <reference path='model/Component.ts' />
 /// <reference path='model/Components.ts' />
+/// <reference path='model/Topology.ts' />
+/// <reference path='model/Connection.ts' />
 /// <reference path='services/ComponentsResource.ts' />
 /// <reference path='services/CodeResource.ts' />
 /// <reference path='Application.ts' />
