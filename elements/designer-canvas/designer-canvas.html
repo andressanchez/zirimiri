@@ -37,6 +37,8 @@ A canvas component for Zirimiri Designer.
         var canvasElement;
         // Element that fired the event
         var sourceElement;
+        // Selected element
+        var selectedElement;
 
         // Event fired when an object is moved
         var moveObjectEvent;
@@ -183,7 +185,13 @@ A canvas component for Zirimiri Designer.
                 for (var index = 0; index < boxes.length; ++index) {
                     boxes[index].parentElement.removeChild(boxes[index]);
                 }
-                // 2. Clear links
+                // 2. Remove links
+                var links = canvasElement.querySelectorAll("svg > path");
+                for (var index = 0; index < links.length; ++index) {
+                    links[index].parentElement.removeChild(links[index]);
+                }
+
+                // 3. Remove reference to links
                 removeLinks();
             }
         });

@@ -188,15 +188,6 @@ function getLinks(source)
 
 function removeLinks()
 {
-    for (var key in _links)
-    {
-        if (_links.hasOwnProperty(key))
-        {
-            _links[key][0].arrow.linePath.remove();
-            _links[key][0].arrow.arrowPath.remove();
-        }
-    }
-
     _links = {};
 }
 

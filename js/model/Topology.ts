@@ -1,3 +1,5 @@
+/// <reference path='../utils/UUID.ts' />
+
 module model
 {
     'use strict';
@@ -36,6 +38,19 @@ module model
         {
             this.components = [];
             this.connections = [];
+        }
+
+        /**
+         * Add a new component
+         * @param className
+         * @returns {string} UUID of the added component
+         */
+        public addComponent(className:string) : string
+        {
+            var component = new Component();
+            component.id = utils.UUID.generate();
+            this.components.push(component);
+            return component.id;
         }
     }
 }

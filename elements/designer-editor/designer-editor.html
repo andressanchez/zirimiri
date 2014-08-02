@@ -81,13 +81,13 @@
     <script>
 
         var designerCanvas;
+        var controller;
 
         Polymer('designer-editor',
         {
             selected: 'design',
             selectedName: 'topology-1',
             selectedTool: 'palette',
-            controller: null,
             controllerScope: null,
 
             eventDelegates: {
@@ -111,19 +111,24 @@
              */
             createTopology: function() {
                 // Reset topology object in the model
-                this.controller.createTopology();
+                controller.createTopology();
                 // Clean canvas and arrows
                 designerCanvas.reset();
             },
 
+            /**
+             *
+             * @param event
+             * @param dragInfo
+             */
             drag: function(event, dragInfo) {
                 dragInfo.element = dragInfo.event.target;
 
                 if (!dragInfo.element || dragInfo.element.className != "simple-item") {
                     return;
                 }
-                dragInfo.id = dragInfo.element.attributes.id.value;
-                dragInfo.data = this.controllerScope.components.getComponentById(dragInfo.id);
+                dragInfo.className = dragInfo.element.attributes.id.value;
+                dragInfo.data = this.controllerScope.components.getComponentById(dragInfo.className);
                 var d = document.createElement('fancy-box');
                 d.setAttribute('label', dragInfo.data.name);
                 d.setAttribute('logo', dragInfo.data.logo);
@@ -133,13 +138,18 @@
                 event.detail.drop = this.drop;
             },
 
+            /**
+             *
+             * @param dragInfo
+             */
             drop: function(dragInfo) {
                 var dropTarget = dragInfo.event.relatedTarget;
                 if (dropTarget.tagName === 'svg') {
                     var f = dragInfo.framed;
+                    var uuid = controller.addComponent(dragInfo.className);
                     var wrapper = document.createElement('div');
                     wrapper.setAttribute('class', 'wrapper');
-                    wrapper.setAttribute('id', guid());
+                    wrapper.setAttribute('id', uuid);
                     wrapper.className = 'dropped';
                     wrapper.style.left = f.x - 4 + 'px';
                     wrapper.style.top = f.y - 4 + 'px';
@@ -159,14 +169,21 @@
                 }
             },
 
+            /**
+             *
+             * @param vm
+             */
             setController: function(vm) {
-                this.controller = vm;
+                controller = vm;
                 this.controllerScope = vm.$scope;
                 this.updateCode();
             },
 
+            /**
+             *
+             */
             updateCode: function() {
-                this.$.code.mirror.setValue(this.controller.$scope.code);
+                this.$.code.mirror.setValue(this.controllerScope.code);
                 this.$.code.refresh();
             }
         });

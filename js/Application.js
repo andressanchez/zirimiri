@@ -28,6 +28,9 @@ var controllers;
             codeResource.getCode().then(function (result) {
                 $scope.code = result.code;
             });
+
+            model.Topology.getInstance().resetTopology();
+            this.topology = model.Topology.getInstance();
         }
         /**
         * Create a new topology
@@ -61,7 +64,8 @@ var controllers;
         * @returns {string} UUID of the new component
         */
         EditorCtrl.prototype.addComponent = function (className) {
-            return null;
+            console.log(className);
+            return model.Topology.getInstance().addComponent(className);
         };
 
         /**
@@ -195,6 +199,25 @@ var model;
     })();
     model.Components = Components;
 })(model || (model = {}));
+var utils;
+(function (utils) {
+    'use strict';
+
+    var UUID = (function () {
+        function UUID() {
+        }
+        UUID.generate = function () {
+            return UUID.s4() + UUID.s4() + '-' + UUID.s4() + '-' + UUID.s4() + '-' + UUID.s4() + '-' + UUID.s4() + UUID.s4() + UUID.s4();
+        };
+
+        UUID.s4 = function () {
+            return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        };
+        return UUID;
+    })();
+    utils.UUID = UUID;
+})(utils || (utils = {}));
+/// <reference path='../utils/UUID.ts' />
 var model;
 (function (model) {
     'use strict';
@@ -225,6 +248,18 @@ var model;
         Topology.prototype.resetTopology = function () {
             this.components = [];
             this.connections = [];
+        };
+
+        /**
+        * Add a new component
+        * @param className
+        * @returns {string} UUID of the added component
+        */
+        Topology.prototype.addComponent = function (className) {
+            var component = new model.Component();
+            component.id = utils.UUID.generate();
+            this.components.push(component);
+            return component.id;
         };
         return Topology;
     })();

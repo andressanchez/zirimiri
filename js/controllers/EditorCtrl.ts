@@ -11,6 +11,8 @@ module controllers
      */
     export class EditorCtrl
     {
+        private topology;
+
         public static $inject = [
             '$scope',
             'componentsResource',
@@ -40,6 +42,9 @@ module controllers
             {
                $scope.code = result.code;
             });
+
+            model.Topology.getInstance().resetTopology();
+            this.topology = model.Topology.getInstance();
         }
 
         /**
@@ -78,7 +83,8 @@ module controllers
          */
         public addComponent(className: string):string
         {
-            return null;
+            console.log(className);
+            return model.Topology.getInstance().addComponent(className);
         }
 
         /**
