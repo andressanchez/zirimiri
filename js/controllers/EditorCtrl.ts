@@ -11,7 +11,8 @@ module controllers
      */
     export class EditorCtrl
     {
-        private topology;
+        private topology:model.Topology;
+        private translatorType:string;
 
         public static $inject = [
             '$scope',
@@ -53,7 +54,6 @@ module controllers
         public createTopology():void
         {
             model.Topology.getInstance().resetTopology();
-            console.log("Created topology!");
         }
 
         /**
@@ -83,40 +83,39 @@ module controllers
          */
         public addComponent(className: string):string
         {
-            console.log(className);
             return model.Topology.getInstance().addComponent(className);
         }
 
         /**
-         *
-         * @param uuid
-         * @returns {boolean}
+         * Remove a given component
+         * @param uuid UUID of the component to remove
+         * @returns {boolean} True if it was removed, false otherwise
          */
         public removeComponent(uuid: string):boolean
         {
-            return false;
+            return model.Topology.getInstance().removeComponent(uuid);
         }
 
         /**
-         *
-         * @param uuidSource
-         * @param uuidTarget
-         * @returns {boolean}
+         * Add a new connection between components
+         * @param uuidSource UUID of the source component
+         * @param uuidTarget UUID of the target component
+         * @returns {boolean} True if the connection has been establish, false otherwise
          */
         public addConnection(uuidSource: string, uuidTarget: string):boolean
         {
-            return false;
+            return model.Topology.getInstance().addConnection(uuidSource, uuidTarget);
         }
 
         /**
-         *
-         * @param uuidSource
-         * @param uuidTarget
-         * @returns {boolean}
+         * Remove an existent connection between components
+         * @param uuidSource UUID of the source component
+         * @param uuidTarget UUID of the target component
+         * @returns {boolean} True if the connection has been remove, false otherwise
          */
         public removeConnection(uuidSource: string, uuidTarget: string):boolean
         {
-            return false;
+            return model.Topology.getInstance().removeConnection(uuidSource, uuidTarget);
         }
 
         /**
@@ -125,7 +124,25 @@ module controllers
          */
         public topologyToCode():string[]
         {
-            return null;
+            var translation:string[] = [];
+
+            if (this.translatorType == "trident")
+                translation.push(model.translator.TridentTranslator.translate(model.Topology.getInstance()));
+            else if (this.translatorType == "marceline")
+                translation.push(model.translator.MarcelineTranslator.translate(model.Topology.getInstance()));
+            else
+                translation.push(model.translator.StormTranslator.translate(model.Topology.getInstance()));
+
+            return translation;
+        }
+
+        /**
+         *
+         * @param type
+         */
+        public changeTranslator(type:string):void
+        {
+            this.translatorType = type;
         }
     }
 }

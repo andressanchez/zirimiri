@@ -101,6 +101,11 @@ A canvas component for Zirimiri Designer.
                     canvasElement.onmousemove = createArrowEvent;
                     canvasElement.onmouseup = placeArrowEvent;
                 }
+                else if (element.tagName == 'path')
+                {
+                    var connection = removeConnection(element);
+                    controller.removeConnection(connection.source, connection.target);
+                }
             },
 
             /**
@@ -179,6 +184,7 @@ A canvas component for Zirimiri Designer.
                     var _target = calculateMiddleOfSide(element.parentElement, nearestSideToTarget);
                     arrowElement = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
                     addConnection(sourceElement.parentElement, element.parentElement, arrowElement);
+                    controller.addConnection(sourceElement.parentElement.id, element.parentElement.id);
                 }
 
                 canvasElement.onmousemove = null;

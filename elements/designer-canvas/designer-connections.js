@@ -38,3 +38,27 @@ function removeComponentConnections(component)
     }
     _connections = newConnections;
 }
+
+function removeConnection(arrow)
+{
+    var newConnections = {};
+    var connectionInfo = {};
+
+    for (var key in _connections)
+    {
+        _connections[key].forEach(function (connection) {
+            if (connection.arrow.linePath[0] == arrow) {
+                connection.arrow.arrowPath.remove();
+                connection.arrow.linePath.remove();
+                connectionInfo = { source: connection.source.id, target: connection.target.id };
+            }
+            else if(connection.arrow.linePath[0] != null) {
+                if (newConnections[key] == null) newConnections[key] = [];
+                newConnections[key].push(connection);
+            }
+        });
+    }
+    _connections = newConnections;
+
+    return connectionInfo;
+}

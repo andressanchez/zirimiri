@@ -26,9 +26,9 @@
                         font-weight: normal;
                     }
                 </style>
-                <core-item label="Storm" on-tap="{{moveoutElement}}"></core-item>
-                <core-item label="Trident" on-tap="{{promoteElement}}"></core-item>
-                <core-item label="Marceline" on-tap="{{demoteElement}}"></core-item>
+                <core-item label="Storm" on-tap="{{changeTranslatorToStorm}}"></core-item>
+                <core-item label="Trident" on-tap="{{changeTranslatorToTrident}}"></core-item>
+                <core-item label="Marceline" on-tap="{{changeTranslatorToMarceline}}"></core-item>
             </core-menu-button>
             <span class="separator"></span>
 
@@ -103,6 +103,7 @@
 
             codeToggleAction: function() {
                 this.selected = this.selected === 'design' ? 'code' : 'design';
+                if (this.selected == 'code') this.updateCode();
             },
 
             fullscreenAction: function() {
@@ -201,8 +202,32 @@
              *
              */
             updateCode: function() {
-                this.$.code.mirror.setValue(this.controllerScope.code);
+                this.$.code.mirror.setValue(controller.topologyToCode()[0]);
                 this.$.code.refresh();
+            },
+
+            /**
+             *
+             */
+            changeTranslatorToStorm: function() {
+                controller.changeTranslator("storm");
+                this.updateCode();
+            },
+
+            /**
+             *
+             */
+            changeTranslatorToTrident: function() {
+                controller.changeTranslator("trident");
+                this.updateCode();
+            },
+
+            /**
+             *
+             */
+            changeTranslatorToMarceline: function() {
+                controller.changeTranslator("marceline");
+                this.updateCode();
             }
         });
 

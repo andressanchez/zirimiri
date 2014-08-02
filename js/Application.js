@@ -37,7 +37,6 @@ var controllers;
         */
         EditorCtrl.prototype.createTopology = function () {
             model.Topology.getInstance().resetTopology();
-            console.log("Created topology!");
         };
 
         /**
@@ -64,37 +63,36 @@ var controllers;
         * @returns {string} UUID of the new component
         */
         EditorCtrl.prototype.addComponent = function (className) {
-            console.log(className);
             return model.Topology.getInstance().addComponent(className);
         };
 
         /**
-        *
-        * @param uuid
-        * @returns {boolean}
+        * Remove a given component
+        * @param uuid UUID of the component to remove
+        * @returns {boolean} True if it was removed, false otherwise
         */
         EditorCtrl.prototype.removeComponent = function (uuid) {
-            return false;
+            return model.Topology.getInstance().removeComponent(uuid);
         };
 
         /**
-        *
-        * @param uuidSource
-        * @param uuidTarget
-        * @returns {boolean}
+        * Add a new connection between components
+        * @param uuidSource UUID of the source component
+        * @param uuidTarget UUID of the target component
+        * @returns {boolean} True if the connection has been establish, false otherwise
         */
         EditorCtrl.prototype.addConnection = function (uuidSource, uuidTarget) {
-            return false;
+            return model.Topology.getInstance().addConnection(uuidSource, uuidTarget);
         };
 
         /**
-        *
-        * @param uuidSource
-        * @param uuidTarget
-        * @returns {boolean}
+        * Remove an existent connection between components
+        * @param uuidSource UUID of the source component
+        * @param uuidTarget UUID of the target component
+        * @returns {boolean} True if the connection has been remove, false otherwise
         */
         EditorCtrl.prototype.removeConnection = function (uuidSource, uuidTarget) {
-            return false;
+            return model.Topology.getInstance().removeConnection(uuidSource, uuidTarget);
         };
 
         /**
@@ -102,7 +100,24 @@ var controllers;
         * @returns {string[]}
         */
         EditorCtrl.prototype.topologyToCode = function () {
-            return null;
+            var translation = [];
+
+            if (this.translatorType == "trident")
+                translation.push(model.translator.TridentTranslator.translate(model.Topology.getInstance()));
+            else if (this.translatorType == "marceline")
+                translation.push(model.translator.MarcelineTranslator.translate(model.Topology.getInstance()));
+            else
+                translation.push(model.translator.StormTranslator.translate(model.Topology.getInstance()));
+
+            return translation;
+        };
+
+        /**
+        *
+        * @param type
+        */
+        EditorCtrl.prototype.changeTranslator = function (type) {
+            this.translatorType = type;
         };
         EditorCtrl.$inject = [
             '$scope',
@@ -242,12 +257,36 @@ var model;
             return this.uniqueInstance;
         };
 
+        Object.defineProperty(Topology.prototype, "components", {
+            /**
+            * Get the components in the topology
+            * @returns {Component[]} Components in the topology
+            */
+            get: function () {
+                return this._components;
+            },
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Topology.prototype, "connections", {
+            /**
+            * Get the connections in the topology
+            * @returns {Connection[]} Connections in the topology
+            */
+            get: function () {
+                return this._connections;
+            },
+            enumerable: true,
+            configurable: true
+        });
+
         /**
         * Reset the topology and leave it empty
         */
         Topology.prototype.resetTopology = function () {
-            this.components = [];
-            this.connections = [];
+            this._components = [];
+            this._connections = [];
         };
 
         /**
@@ -258,8 +297,77 @@ var model;
         Topology.prototype.addComponent = function (className) {
             var component = new model.Component();
             component.id = utils.UUID.generate();
-            this.components.push(component);
+            this._components.push(component);
             return component.id;
+        };
+
+        /**
+        * Remove a component
+        * @param uuid UUID of the component to remove
+        * @returns {boolean} True if it was removed, false otherwise
+        */
+        Topology.prototype.removeComponent = function (uuid) {
+            var index = -1;
+
+            for (var i = 0; i < this._components.length; i++)
+                if (this._components[i].id == uuid) {
+                    index = i;
+                    break;
+                }
+
+            if (index == -1)
+                return false;
+
+            this._components.splice(index, 1);
+            return true;
+        };
+
+        /**
+        * Add a new connection between components
+        * @param uuidSource UUID of the source component
+        * @param uuidTarget UUID of the target component
+        * @returns {boolean} True if the connection has been establish, false otherwise
+        */
+        Topology.prototype.addConnection = function (uuidSource, uuidTarget) {
+            var source = null;
+            var target = null;
+
+            for (var i = 0; i < this._components.length; i++) {
+                if (this._components[i].id == uuidSource)
+                    source = this._components[i];
+                if (this._components[i].id == uuidTarget)
+                    target = this._components[i];
+            }
+
+            if (source == null || target == null)
+                return false;
+
+            var connection = new model.Connection(source, target);
+            this._connections.push(connection);
+            return true;
+        };
+
+        /**
+        * Remove an existent connection between components
+        * @param uuidSource UUID of the source component
+        * @param uuidTarget UUID of the target component
+        * @returns {boolean} True if the connection has been remove, false otherwise
+        */
+        Topology.prototype.removeConnection = function (uuidSource, uuidTarget) {
+            var index = -1;
+
+            for (var i = 0; i < this._connections.length; i++) {
+                if (this._connections[i].source.id == uuidSource && this._connections[i].target.id == uuidTarget) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1)
+                return false;
+
+            this._connections.splice(index, 1);
+            return true;
         };
         return Topology;
     })();
@@ -271,11 +379,213 @@ var model;
     'use strict';
 
     var Connection = (function () {
-        function Connection() {
+        function Connection(_source, _target) {
+            this._source = _source;
+            this._target = _target;
         }
+        Object.defineProperty(Connection.prototype, "source", {
+            /**
+            * Get the source component of this connection
+            * @returns {Component} Source component
+            */
+            get: function () {
+                return this._source;
+            },
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Connection.prototype, "target", {
+            /**
+            * Get the target component of this connection
+            * @returns {Component} Target component
+            */
+            get: function () {
+                return this._target;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Connection;
     })();
     model.Connection = Connection;
+})(model || (model = {}));
+/// <reference path='../Topology.ts' />
+var model;
+(function (model) {
+    (function (translator) {
+        'use strict';
+
+        /**
+        * The Translator interface must be implemented by
+        * every translator from graphical view to code
+        * @author Andrés Sánchez
+        */
+        var Translator = (function () {
+            function Translator() {
+            }
+            /**
+            * Translate a topology
+            * @param topology Topology to translate
+            */
+            Translator.translate = function (topology) {
+                return "";
+            };
+            return Translator;
+        })();
+        translator.Translator = Translator;
+    })(model.translator || (model.translator = {}));
+    var translator = model.translator;
+})(model || (model = {}));
+/// <reference path='../Topology.ts' />
+/// <reference path='../Component.ts' />
+/// <reference path='../Connection.ts' />
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var model;
+(function (model) {
+    (function (translator) {
+        'use strict';
+
+        /**
+        * The StormTranslator translates a topology
+        * into its correspondent code in Storm
+        * @author Andrés Sánchez
+        */
+        var StormTranslator = (function (_super) {
+            __extends(StormTranslator, _super);
+            function StormTranslator() {
+                _super.apply(this, arguments);
+            }
+            /**
+            * Translate a topology into Storm
+            * @param topology Topology to translate
+            */
+            StormTranslator.translate = function (topology) {
+                var translation = "Storm\n------------------\n";
+                var connections = topology.connections;
+                var components = topology.components;
+
+                for (var i = 0; i < connections.length; i++) {
+                    translation += "Connection\n------------------\n";
+                    translation += "Source => " + connections[i].source.id + "\n";
+                    translation += "Target => " + connections[i].target.id + "\n";
+                    translation += "------------------\n";
+                }
+
+                for (var i = 0; i < components.length; i++) {
+                    translation += "Component\n------------------\n";
+                    translation += "Id => " + components[i].id + "\n";
+                    translation += "------------------\n";
+                }
+
+                return translation;
+            };
+            return StormTranslator;
+        })(translator.Translator);
+        translator.StormTranslator = StormTranslator;
+    })(model.translator || (model.translator = {}));
+    var translator = model.translator;
+})(model || (model = {}));
+/// <reference path='../Topology.ts' />
+/// <reference path='../Component.ts' />
+/// <reference path='../Connection.ts' />
+var model;
+(function (model) {
+    (function (translator) {
+        'use strict';
+
+        /**
+        * The TridentTranslator translates a topology
+        * into its correspondent code in Trident
+        * @author Andrés Sánchez
+        */
+        var TridentTranslator = (function (_super) {
+            __extends(TridentTranslator, _super);
+            function TridentTranslator() {
+                _super.apply(this, arguments);
+            }
+            /**
+            * Translate a topology into Trident
+            * @param topology Topology to translate
+            */
+            TridentTranslator.translate = function (topology) {
+                var translation = "Trident\n------------------\n";
+                var connections = topology.connections;
+                var components = topology.components;
+
+                for (var i = 0; i < connections.length; i++) {
+                    translation += "Connection\n------------------\n";
+                    translation += "Source => " + connections[i].source.id + "\n";
+                    translation += "Target => " + connections[i].target.id + "\n";
+                    translation += "------------------\n";
+                }
+
+                for (var i = 0; i < components.length; i++) {
+                    translation += "Component\n------------------\n";
+                    translation += "Id => " + components[i].id + "\n";
+                    translation += "------------------\n";
+                }
+
+                return translation;
+            };
+            return TridentTranslator;
+        })(translator.Translator);
+        translator.TridentTranslator = TridentTranslator;
+    })(model.translator || (model.translator = {}));
+    var translator = model.translator;
+})(model || (model = {}));
+/// <reference path='../Topology.ts' />
+/// <reference path='../Component.ts' />
+/// <reference path='../Connection.ts' />
+var model;
+(function (model) {
+    (function (translator) {
+        'use strict';
+
+        /**
+        * The MarcelineTranslator translates a topology
+        * into its correspondent code in Marceline
+        * @author Andrés Sánchez
+        */
+        var MarcelineTranslator = (function (_super) {
+            __extends(MarcelineTranslator, _super);
+            function MarcelineTranslator() {
+                _super.apply(this, arguments);
+            }
+            /**
+            * Translate a topology into Marceline
+            * @param topology Topology to translate
+            */
+            MarcelineTranslator.translate = function (topology) {
+                var translation = "Marceline\n------------------\n";
+                var connections = topology.connections;
+                var components = topology.components;
+
+                for (var i = 0; i < connections.length; i++) {
+                    translation += "Connection\n------------------\n";
+                    translation += "Source => " + connections[i].source.id + "\n";
+                    translation += "Target => " + connections[i].target.id + "\n";
+                    translation += "------------------\n";
+                }
+
+                for (var i = 0; i < components.length; i++) {
+                    translation += "Component\n------------------\n";
+                    translation += "Id => " + components[i].id + "\n";
+                    translation += "------------------\n";
+                }
+
+                return translation;
+            };
+            return MarcelineTranslator;
+        })(translator.Translator);
+        translator.MarcelineTranslator = MarcelineTranslator;
+    })(model.translator || (model.translator = {}));
+    var translator = model.translator;
 })(model || (model = {}));
 /// <reference path='../_all.ts' />
 var services;
@@ -324,6 +634,10 @@ var services;
 /// <reference path='model/Components.ts' />
 /// <reference path='model/Topology.ts' />
 /// <reference path='model/Connection.ts' />
+/// <reference path='model/translator/Translator.ts' />
+/// <reference path='model/translator/StormTranslator.ts' />
+/// <reference path='model/translator/TridentTranslator.ts' />
+/// <reference path='model/translator/MarcelineTranslator.ts' />
 /// <reference path='services/ComponentsResource.ts' />
 /// <reference path='services/CodeResource.ts' />
 /// <reference path='Application.ts' />
