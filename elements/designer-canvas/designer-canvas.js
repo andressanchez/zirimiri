@@ -169,36 +169,3 @@ function pDistance(x, y, x1, y1, x2, y2) {
     var dy = y - yy;
     return Math.sqrt(dx * dx + dy * dy);
 }
-
-var _links = {};
-
-function addLink(source, target, arrow)
-{
-    if (_links[source.id] == null) _links[source.id] = [];
-    if (_links[target.id] == null) _links[target.id] = [];
-    var link = {source: source, target: target, arrow: arrow};
-    _links[source.id].push(link);
-    _links[target.id].push(link);
-}
-
-function getLinks(source)
-{
-    return _links[source.id];
-}
-
-function removeLinks()
-{
-    _links = {};
-}
-
-var guid = (function() {
-    function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-    }
-    return function() {
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-            s4() + '-' + s4() + s4() + s4();
-    };
-})();

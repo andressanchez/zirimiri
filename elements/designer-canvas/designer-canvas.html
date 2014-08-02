@@ -15,6 +15,7 @@ A canvas component for Zirimiri Designer.
 <link rel="import" href="../../components/polymer/polymer.html">
 <script src="raphael.js"></script>
 <script src="designer-canvas.js"></script>
+<script src="designer-connections.js"></script>
 
 <polymer-element name="designer-canvas" vertical layout>
 
@@ -79,11 +80,20 @@ A canvas component for Zirimiri Designer.
                 event = event || window.event;
                 var element = (event.target || event.srcElement);
 
+                // Remove 'selected' class from selected object
+                if (selectedElement != null)
+                {
+                    selectedElement.className = "dropped";
+                    selectedElement = null;
+                }
+
                 if (element.tagName == 'FANCY-BOX') // Move box!
                 {
                     sourceElement = element.parentElement;
+                    selectedElement = sourceElement;
                     canvasElement.onmousemove = moveObjectEvent;
                     canvasElement.onmouseup = releaseObjectEvent;
+                    selectedElement.className += " selected";
                 }
                 else if (element.className == 'ep') // Create an arrow!
                 {
@@ -104,19 +114,19 @@ A canvas component for Zirimiri Designer.
                 sourceElement.style.top = (y - sourceElement.offsetHeight * 0.5 - canvasPosition.y) + 'px';
                 sourceElement.style.left = (x - sourceElement.offsetWidth * 0.5 - canvasPosition.x) + 'px';
 
-                var links = getLinks(sourceElement);
-                if (links != null)
+                var connections = getConnections(sourceElement);
+                if (connections != null)
                 {
-                    links.forEach(function(link) {
+                    connections.forEach(function(connection) {
                         // Which side of the target element is the nearest to the center of the source element?
-                        var nearestSideToTarget = findNearestSideToElement(link.source, link.target);
+                        var nearestSideToTarget = findNearestSideToElement(connection.source, connection.target);
                         // Which side of the target element is the nearest to the center of the target element?
-                        var nearestSideToSource = findNearestSideToElement(link.target, link.source);
-                        var _source = calculateMiddleOfSide(link.source, nearestSideToSource);
-                        var _target = calculateMiddleOfSide(link.target, nearestSideToTarget);
-                        link.arrow.linePath.remove();
-                        link.arrow.arrowPath.remove();
-                        link.arrow = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
+                        var nearestSideToSource = findNearestSideToElement(connection.target, connection.source);
+                        var _source = calculateMiddleOfSide(connection.source, nearestSideToSource);
+                        var _target = calculateMiddleOfSide(connection.target, nearestSideToTarget);
+                        connection.arrow.linePath.remove();
+                        connection.arrow.arrowPath.remove();
+                        connection.arrow = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
                     });
                 }
             },
@@ -168,7 +178,7 @@ A canvas component for Zirimiri Designer.
                     var _source = calculateMiddleOfSide(sourceElement.parentElement, nearestSideToSource);
                     var _target = calculateMiddleOfSide(element.parentElement, nearestSideToTarget);
                     arrowElement = paper.arrow(_source.x, _source.y, _target.x, _target.y, 4);
-                    addLink(sourceElement.parentElement, element.parentElement, arrowElement);
+                    addConnection(sourceElement.parentElement, element.parentElement, arrowElement);
                 }
 
                 canvasElement.onmousemove = null;
@@ -186,13 +196,23 @@ A canvas component for Zirimiri Designer.
                     boxes[index].parentElement.removeChild(boxes[index]);
                 }
                 // 2. Remove links
-                var links = canvasElement.querySelectorAll("svg > path");
-                for (var index = 0; index < links.length; ++index) {
-                    links[index].parentElement.removeChild(links[index]);
+                var connections = canvasElement.querySelectorAll("svg > path");
+                for (var index = 0; index < connections.length; ++index) {
+                    connections[index].parentElement.removeChild(connections[index]);
                 }
-
                 // 3. Remove reference to links
-                removeLinks();
+                resetConnections();
+            },
+
+            /**
+             * Remove a given component with its arrows
+             * @param component Component to remove
+             */
+            removeComponent: function(component) {
+                // 1. Remove component
+                component.parentElement.removeChild(component);
+                // 2. Remove links;
+                removeComponentConnections(component);
             }
         });
     </script>

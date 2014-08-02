@@ -35,6 +35,9 @@
             <core-icon-button title="New Topology" icon="create" on-click="{{createTopology}}"></core-icon-button>
             <core-icon-button title="Open Topology" icon="folder" on-tap="{{openTopology}}"></core-icon-button>
             <core-icon-button title="Save Topology" icon="save" on-tap="{{saveTopology}}"></core-icon-button>
+            <span class="separator"></span>
+            <core-icon-button title="Remove Component" icon="delete" on-click="{{removeComponent}}"></core-icon-button>
+            <core-icon-button title="Settings" icon="settings" on-click="{{settingsComponent}}"></core-icon-button>
 
             <div class="design-controls" horizontal center layout hidden?="{{selected == 'code'}}">
                 <span class="separator"></span>
@@ -114,6 +117,21 @@
                 controller.createTopology();
                 // Clean canvas and arrows
                 designerCanvas.reset();
+            },
+
+            /**
+             * Remove the selected component
+             */
+            removeComponent: function() {
+                if (selectedElement != null)
+                {
+                    // Remove component from the model
+                    controller.removeComponent(selectedElement.id);
+                    // Remove selected box and its arrows
+                    designerCanvas.removeComponent(selectedElement);
+                    // Remove selection from selected element
+                    selectedElement = null;
+                }
             },
 
             /**

@@ -142,7 +142,11 @@ core-icon-button.rotate {
 .dropped {
     position: absolute;
     width: 80px;
-    height: 100px;
+    height: 102px;
+}
+
+.dropped.selected {
+    border: 4px dashed silver;
 }
 
 designer-canvas {
